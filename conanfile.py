@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from conans import ConanFile, AutoToolsBuildEnvironment, tools
 import os
 import glob
@@ -6,14 +9,15 @@ import shutil
 
 class FFMpegConan(ConanFile):
     name = "ffmpeg"
-    version = "4.2"
+    version = "3.3.1"
     url = "https://github.com/bincrafters/conan-ffmpeg"
     description = "A complete, cross-platform solution to record, convert and stream audio and video"
     # https://github.com/FFmpeg/FFmpeg/blob/master/LICENSE.md
-    license = ("LGPL-2.1-or-later", "GPL-2.0-or-later")
+    license = "LGPL-2.1-or-later", "GPL-2.0-or-later"
     homepage = "https://ffmpeg.org/"
-    topics = ("ffmpeg", "multimedia", "audio", "video", "encoder", "decoder", "encoding", "decoding",
-             "transcoding", "multiplexer", "demultiplexer", "streaming")
+    author = "Bincrafters <bincrafters@gmail.com>"
+    topics = "ffmpeg", "multimedia", "audio", "video", "encoder", "decoder", "encoding", "decoding",\
+             "transcoding", "multiplexer", "demultiplexer", "streaming"
     exports_sources = ["LICENSE"]
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False],
@@ -49,27 +53,27 @@ class FFMpegConan(ConanFile):
                "videotoolbox": [True, False],
                "securetransport": [True, False],
                "qsv": [True, False]}
-    default_options = {'shared': False,
+    default_options = {'shared': True,
                        'fPIC': True,
-                       'postproc': True,
+                       'postproc': False,
                        'zlib': True,
                        'bzlib': True,
                        'lzma': True,
-                       'iconv': True,
-                       'freetype': True,
-                       'openjpeg': True,
+                       'iconv': False,
+                       'freetype': False,
+                       'openjpeg': False,
                        'openh264': True,
-                       'opus': True,
-                       'vorbis': True,
+                       'opus': False,
+                       'vorbis': False,
                        'zmq': False,
                        'sdl2': False,
-                       'x264': True,
-                       'x265': True,
-                       'vpx': True,
-                       'mp3lame': True,
-                       'fdk_aac': True,
-                       'webp': True,
-                       'openssl': True,
+                       'x264': False,
+                       'x265': False,
+                       'vpx': False,
+                       'mp3lame': False,
+                       'fdk_aac': False,
+                       'webp': False,
+                       'openssl': False,
                        'alsa': True,
                        'pulse': True,
                        'vaapi': True,
@@ -80,9 +84,8 @@ class FFMpegConan(ConanFile):
                        'coreimage': True,
                        'audiotoolbox': True,
                        'videotoolbox': True,
-                       'securetransport': False,  # conflicts with OpenSSL
+                       'securetransport': True,  # conflicts with OpenSSL
                        'qsv': True}
-    generators = "pkg_config"
     _source_subfolder = "source_subfolder"
 
     @property
@@ -96,13 +99,12 @@ class FFMpegConan(ConanFile):
     def source(self):
         source_url = "http://ffmpeg.org/releases/ffmpeg-%s.tar.bz2" % self.version
         tools.get(source_url,
-                  sha256="306bde5f411e9ee04352d1d3de41bd3de986e42e2af2a4c44052dce1ada26fb8")
+                  sha256="fcb2cd7b77fcb66a00abccd5a04e34342a02cab9f89626f28cf1abca715b6730")
         extracted_dir = self.name + "-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
 
     def configure(self):
         del self.settings.compiler.libcxx
-        del self.settings.compiler.cppstd
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -124,51 +126,50 @@ class FFMpegConan(ConanFile):
             self.options.remove("qsv")
 
     def build_requirements(self):
-        self.build_requires("yasm/1.3.0")
-        if tools.os_info.is_windows:
-            if "CONAN_BASH_PATH" not in os.environ:
-                self.build_requires("msys2/20161025")
+        self.build_requires("yasm_installer/1.3.0@bincrafters/stable")
+        if self.settings.os == 'Windows':
+            self.build_requires("msys2_installer/latest@bincrafters/stable")
 
     def requirements(self):
         if self.options.zlib:
-            self.requires.add("zlib/1.2.11")
+            self.requires.add("zlib/1.2.11@conan/stable")
         if self.options.bzlib:
-            self.requires.add("bzip2/1.0.8")
+            self.requires.add("bzip2/1.0.6@conan/stable")
         if self.options.lzma:
-            self.requires.add("xz_utils/5.2.4")
+            self.requires.add("lzma/5.2.3@bincrafters/stable")
         if self.options.iconv:
-            self.requires.add("libiconv/1.15")
+            self.requires.add("libiconv/1.15@bincrafters/stable")
         if self.options.freetype:
-            self.requires.add("freetype/2.10.0")
+            self.requires.add("freetype/2.9.0@bincrafters/stable")
         if self.options.openjpeg:
-            self.requires.add("openjpeg/2.3.1@bincrafters/stable")
+            self.requires.add("openjpeg/2.3.0@bincrafters/stable")
         if self.options.openh264:
             self.requires.add("openh264/1.7.0@bincrafters/stable")
         if self.options.vorbis:
             self.requires.add("vorbis/1.3.6@bincrafters/stable")
         if self.options.opus:
-            self.requires.add("opus/1.3.1@bincrafters/stable")
+            self.requires.add("opus/1.2.1@bincrafters/stable")
         if self.options.zmq:
-            self.requires.add("zmq/4.3.1@bincrafters/stable")
+            self.requires.add("zmq/4.2.2@bincrafters/stable")
         if self.options.sdl2:
-            self.requires.add("sdl2/2.0.9@bincrafters/stable")
+            self.requires.add("sdl2/2.0.7@bincrafters/stable")
         if self.options.x264:
-            self.requires.add("libx264/20190605@bincrafters/stable")
+            self.requires.add("libx264/20171211@bincrafters/stable")
         if self.options.x265:
-            self.requires.add("libx265/3.0@bincrafters/stable")
+            self.requires.add("libx265/2.7@bincrafters/stable")
         if self.options.vpx:
-            self.requires.add("libvpx/1.8.0@bincrafters/stable")
+            self.requires.add("libvpx/1.7.0@bincrafters/stable")
         if self.options.mp3lame:
             self.requires.add("libmp3lame/3.100@bincrafters/stable")
         if self.options.fdk_aac:
-            self.requires.add("libfdk_aac/2.0.0@bincrafters/stable")
+            self.requires.add("libfdk_aac/0.1.5@bincrafters/stable")
         if self.options.webp:
-            self.requires.add("libwebp/1.0.3")
+            self.requires.add("libwebp/1.0.0@bincrafters/stable")
         if self.options.openssl:
-            self.requires.add("openssl/1.1.1d")
+            self.requires.add("OpenSSL/1.1.1b@conan/stable")
         if self.settings.os == "Windows":
             if self.options.qsv:
-                self.requires.add("intel_media_sdk/2018R2_1@bincrafters/stable")
+                self.requires.add("intel_media_sdk/2018R2@bincrafters/stable")
 
     def system_requirements(self):
         if self.settings.os == "Linux" and tools.os_info.is_linux:
@@ -202,7 +203,7 @@ class FFMpegConan(ConanFile):
         pc_dir = os.path.join(root, 'lib', 'pkgconfig')
         pc_files = glob.glob('%s/*.pc' % pc_dir)
         for pc_name in pc_files:
-            new_pc = os.path.basename(pc_name)
+            new_pc = os.path.join('pkgconfig', os.path.basename(pc_name))
             self.output.warn('copy .pc file %s' % os.path.basename(pc_name))
             shutil.copy(pc_name, new_pc)
             prefix = tools.unix_path(root) if self.settings.os == 'Windows' else root
@@ -215,34 +216,28 @@ class FFMpegConan(ConanFile):
             # warning LNK4049: locally defined symbol x264_bit_depth imported
             tools.replace_in_file(os.path.join(self._source_subfolder, 'libavcodec', 'libx264.c'),
                                   '#define X264_API_IMPORTS 1', '')
-        if self.options.openssl:
+        if self.options.openssl and False: # v.looze: this patch is not needed for ffmpeg 3.3.1
             # https://trac.ffmpeg.org/ticket/5675
-            openssl_libraries = ' '.join(['-l%s' % lib for lib in self.deps_cpp_info["openssl"].libs])
+            openssl_libraries = ' '.join(['-l%s' % lib for lib in self.deps_cpp_info["OpenSSL"].libs])
             tools.replace_in_file(os.path.join(self._source_subfolder, 'configure'),
                                   'check_lib openssl openssl/ssl.h SSL_library_init -lssl -lcrypto -lws2_32 -lgdi32 ||',
                                   'check_lib openssl openssl/ssl.h OPENSSL_init_ssl %s || ' % openssl_libraries)
 
     def build(self):
         self._patch_sources()
-        with tools.vcvars(self.settings) if self._is_msvc else tools.no_op():
+        if self._is_msvc or self._is_mingw_windows:
+            msys_bin = self.deps_env_info['msys2_installer'].MSYS_BIN
+            with tools.environment_append({'PATH': [msys_bin],
+                                           'CONAN_BASH_PATH': os.path.join(msys_bin, 'bash.exe')}):
+                if self._is_msvc:
+                    with tools.vcvars(self.settings):
+                        self.build_configure()
+                else:
+                    self.build_configure()
+        else:
             self.build_configure()
 
     def build_configure(self):
-        # FIXME : once component feature is out, should be unnecessary
-        if self.options.freetype:
-            shutil.move("freetype.pc", "freetype2.pc")
-        if self.options.openjpeg:
-            shutil.move("openjpeg.pc", "libopenjp2.pc")
-        if self.options.x264:
-            shutil.move("libx264.pc", "x264.pc")
-        if self.options.x265:
-            shutil.move("libx265.pc", "x265.pc")
-        if self.options.fdk_aac:
-            shutil.move("libfdk_aac.pc", "fdk-aac.pc")
-        if self.options.webp:
-            self._copy_pkg_config('libwebp')  # components: libwebpmux
-        if self.options.vorbis:
-            self._copy_pkg_config('vorbis')  # components: vorbisenc, vorbisfile
         with tools.chdir(self._source_subfolder):
             prefix = tools.unix_path(self.package_folder) if self.settings.os == 'Windows' else self.package_folder
             args = ['--prefix=%s' % prefix,
@@ -288,11 +283,13 @@ class FFMpegConan(ConanFile):
             args.append('--enable-libwebp' if self.options.webp else '--disable-libwebp')
             args.append('--enable-openssl' if self.options.openssl else '--disable-openssl')
 
-            if self.options.x264 or self.options.x265 or self.options.postproc:
-                args.append('--enable-gpl')
+            #if self.options.x264 or self.options.x265 or self.options.postproc:
+            #    args.append('--enable-gpl')
+            args.append('--disable-gpl')
 
-            if self.options.fdk_aac:
-                args.append('--enable-nonfree')
+            #if self.options.fdk_aac:
+            #    args.append('--enable-nonfree')
+            args.append('--disable-nonfree')
 
             if self.settings.os == "Linux":
                 args.append('--enable-alsa' if self.options.alsa else '--disable-alsa')
@@ -306,7 +303,7 @@ class FFMpegConan(ConanFile):
                     args.extend(['--disable-libxcb', '--disable-libxcb-shm',
                                  '--disable-libxcb-shape', '--disable-libxcb-xfixes'])
 
-            if self.settings.os == "Macos":
+            if self.settings.os == "Macos" and False: # v.looze: ffmpeg 3.3.1 does not support these config options
                 args.append('--enable-appkit' if self.options.appkit else '--disable-appkit')
                 args.append('--enable-avfoundation' if self.options.avfoundation else '--disable-avfoundation')
                 args.append('--enable-coreimage' if self.options.avfoundation else '--disable-coreimage')
@@ -320,12 +317,59 @@ class FFMpegConan(ConanFile):
             # FIXME disable CUDA and CUVID by default, revisit later
             args.extend(['--disable-cuda', '--disable-cuvid'])
 
-            env_build = AutoToolsBuildEnvironment(self, win_bash=self._is_mingw_windows or self._is_msvc)
-            # ffmpeg's configure is not actually from autotools, so it doesn't understand standard options like
-            # --host, --build, --target
-            env_build.configure(args=args, build=False, host=False, target=False)
-            env_build.make()
-            env_build.make(args=['install'])
+            os.makedirs('pkgconfig')
+            if self.options.freetype:
+                self._copy_pkg_config('freetype')
+                self._copy_pkg_config('libpng')
+            if self.options.opus:
+                self._copy_pkg_config('opus')
+            if self.options.vorbis:
+                self._copy_pkg_config('ogg')
+                self._copy_pkg_config('vorbis')
+            if self.options.zmq:
+                self._copy_pkg_config('zmq')
+            if self.options.sdl2:
+                self._copy_pkg_config('sdl2')
+            if self.options.x264:
+                self._copy_pkg_config('libx264')
+            if self.options.x265:
+                self._copy_pkg_config('libx265')
+            if self.options.vpx:
+                self._copy_pkg_config('libvpx')
+            if self.options.fdk_aac:
+                self._copy_pkg_config('libfdk_aac')
+            if self.options.openh264:
+                self._copy_pkg_config('openh264')
+            if self.options.openjpeg:
+                self._copy_pkg_config('openjpeg')
+            if self.options.webp:
+                self._copy_pkg_config('libwebp')
+
+            pkg_config_path = os.path.abspath('pkgconfig')
+            pkg_config_path = tools.unix_path(pkg_config_path) if self.settings.os == 'Windows' else pkg_config_path
+
+            try:
+                if self._is_msvc or self._is_mingw_windows:
+                    # hack for MSYS2 which doesn't inherit PKG_CONFIG_PATH
+                    for filename in ['.bashrc', '.bash_profile', '.profile']:
+                        tools.run_in_windows_bash(self, 'cp ~/%s ~/%s.bak' % (filename, filename))
+                        command = 'echo "export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:%s" >> ~/%s'\
+                                  % (pkg_config_path, filename)
+                        tools.run_in_windows_bash(self, command)
+
+                env_build = AutoToolsBuildEnvironment(self, win_bash=self._is_mingw_windows or self._is_msvc)
+                # ffmpeg's configure is not actually from autotools, so it doesn't understand standard options like
+                # --host, --build, --target
+                print("CONFIGURE=%s" % args)
+                env_build.configure(args=args, build=False, host=False, target=False,
+                                    pkg_config_paths=[pkg_config_path])
+                env_build.make()
+                env_build.make(args=['install'])
+            finally:
+                if self._is_msvc or self._is_mingw_windows:
+                    for filename in ['.bashrc', '.bash_profile', '.profile']:
+                        tools.run_in_windows_bash(self, 'cp ~/%s.bak ~/%s' % (filename, filename))
+                        tools.run_in_windows_bash(self, 'rm -f ~/%s.bak' % filename)
 
     def package(self):
         with tools.chdir(self._source_subfolder):
@@ -337,13 +381,16 @@ class FFMpegConan(ConanFile):
                 for lib in libs:
                     shutil.move(lib, lib[:-2] + '.lib')
 
-    def run(self, *args, **kwargs):
-        # ensure PKG_CONFIG_PATH is inherited by MSYS bash
-        kwargs["with_login"] = False
-        super(FFMpegConan, self).run(*args, **kwargs)
-
     def package_info(self):
-        libs = ['avdevice', 'avfilter', 'avformat', 'avcodec', 'swresample', 'swscale', 'avutil']
+        libs = [
+            'avcodec',
+            'avdevice',
+            'avfilter',
+            'avformat',
+            'avutil',
+            'swresample',
+            'swscale',
+        ]
         if self.options.postproc:
             libs.append('postproc')
         if self._is_msvc:
@@ -355,7 +402,7 @@ class FFMpegConan(ConanFile):
         else:
             self.cpp_info.libs = libs
         if self.settings.os == "Macos":
-            frameworks = ['CoreVideo', 'CoreMedia', 'CoreGraphics', 'CoreFoundation', 'OpenGL', 'Foundation']
+            frameworks = ['CoreVideo', 'CoreMedia', 'CoreGraphics', 'CoreFoundation', 'OpenGL', 'Foundation', 'VideoDecodeAcceleration']
             if self.options.appkit:
                 frameworks.append('AppKit')
             if self.options.avfoundation:
